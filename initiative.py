@@ -21,6 +21,85 @@ for x in range(0,length):
 
 order = ["","Name","Bonus","Move_d6","Range_d4","Finesse_d6","Cantrip_d6","Melee_d8","Spell_d10","Other_d6","Adv--None--Dis"]
 
+def copy_box():        
+    master.clipboard_clear()
+    master.clipboard_append(textbox.get(1.0,'end'))
+    print(textbox.get(1.0,'end'))
+
+def Roll():
+    textbox.delete(1.0,END)
+    for i in range(0,length):
+        d['combatant'+str(i)]['Name'] = names[i].get()
+        if bonus[i].get().strip().isnumeric():
+            d['combatant'+str(i)]['Bonus'] = round((int(bonus[i].get().strip())/2)+0.1) #add 0.1 so rounding is reliable
+        d['combatant'+str(i)]['Melee_d8'] = melees_d8[i].get()
+        d['combatant'+str(i)]['Move_d6'] = move_d6[i].get()
+        d['combatant'+str(i)]['Range_d4'] = range_d4[i].get()
+        d['combatant'+str(i)]['Finesse_d6'] = finesse_d6[i].get()
+        d['combatant'+str(i)]['Spell_d10'] = spell_d10[i].get()
+        d['combatant'+str(i)]['Cantrip_d6'] = cantrip_d6[i].get()
+        d['combatant'+str(i)]['Other_d6'] = other_d6[i].get()
+        d['combatant'+str(i)]['Advantage'] = advantage[i].get()
+    #pprint.pprint(d)
+    output = []   
+    for i in range(0,length):
+        
+        keys = ['Range_d4', 'Cantrip_d6', 'Finesse_d6','Melee_d8', 'Move_d6','Spell_d10','Other_d6']
+        if sum([d['combatant'+str(i)].get(key) for key in keys]) > 0:
+            name = (d['combatant'+str(i)]["Name"])
+            dice =[]
+            actions = []
+            if d['combatant'+str(i)]['Range_d4'] == 1:
+                dice.append(4)
+                actions.append('Range_d4')
+            if d['combatant'+str(i)]['Cantrip_d6'] == 1:
+                dice.append(6) 
+                actions.append('Cantrip_d6')
+            if d['combatant'+str(i)]['Finesse_d6'] == 1:
+                dice.append(6) 
+                actions.append('Finesse_d6')
+            if d['combatant'+str(i)]['Melee_d8'] == 1:
+                dice.append(8) 
+                actions.append('Melee_d8')
+            if d['combatant'+str(i)]['Move_d6'] == 1:
+                dice.append(6) 
+                actions.append('Move_d6')
+            if d['combatant'+str(i)]['Spell_d10'] == 1:
+                dice.append(10) 
+                actions.append('Spell_d10')
+            if d['combatant'+str(i)]['Other_d6'] == 1:
+                dice.append(6) 
+                actions.append('Other_d6')
+            #print((name,dice))
+            if d['combatant'+str(i)]['Advantage'] == '':
+                rolls = []
+                for die in dice:
+                    rolls.append(random.randint(1,die))
+                roll = sum(rolls) - d['combatant'+str(i)]['Bonus']
+                output.append((name,dice,roll, actions))
+            if d['combatant'+str(i)]['Advantage'] == 'Adv':
+                rolls1 = []
+                rolls2 = []
+                for die in dice:
+                    rolls1.append(random.randint(1,die))
+                    rolls2.append(random.randint(1,die))
+                roll = min(sum(rolls1), sum(rolls2)) -d['combatant'+str(i)]['Bonus']   
+                output.append((name,dice,roll,actions))
+            if d['combatant'+str(i)]['Advantage'] == 'Dis':
+                rolls1 = []
+                rolls2 = []
+                for die in dice:
+                    rolls1.append(random.randint(1,die))
+                    rolls2.append(random.randint(1,die))
+                roll = max(sum(rolls1), sum(rolls2))-d['combatant'+str(i)]['Bonus']           
+                output.append((name,dice,roll,actions))                   
+                
+    output.sort(key = lambda x: x[2])
+    textbox.insert('end', 'Name'.ljust(12)+ 'Roll'.ljust(6) + 'Action\n')
+    for character in output:
+        textbox.insert('end', character[0].ljust(12)+ str(character[2]).ljust(6) + str(character[3])+'\n')
+
+
 #Make and place labels
 for i in range(0,length):
     l1 = Label(master, text = "Combatant " + str(i) +":").grid(row = i+1, column = 0, sticky = W) 
@@ -121,82 +200,11 @@ for i in range(0,length):
     dis.grid(row=i+1, column=order.index("Adv--None--Dis")+2,
              sticky = E)
 
-button=Button(master,text="Roll Initiative",command=Roll).grid(row=length+2,column=0)
+button=Button(master,text="Roll Initiative",command = Roll).grid(row=length+2,column=0)
+
+button2=Button(master,text="Copy",command = copy_box).grid(row=length+2,column=2)
 
 textbox = Text(master, height=length+1, width=80)
 textbox.grid(row=length+3,column=0,columnspan=10, sticky = NSEW)
-    
-def Roll():
-    textbox.delete(1.0,END)
-    for i in range(0,length):
-        d['combatant'+str(i)]['Name'] = names[i].get()
-        if bonus[i].get().strip().isnumeric():
-            d['combatant'+str(i)]['Bonus'] = round((int(bonus[i].get().strip())/2)+0.1) #add 0.1 so rounding is reliable
-        d['combatant'+str(i)]['Melee_d8'] = melees_d8[i].get()
-        d['combatant'+str(i)]['Move_d6'] = move_d6[i].get()
-        d['combatant'+str(i)]['Range_d4'] = range_d4[i].get()
-        d['combatant'+str(i)]['Finesse_d6'] = finesse_d6[i].get()
-        d['combatant'+str(i)]['Spell_d10'] = spell_d10[i].get()
-        d['combatant'+str(i)]['Cantrip_d6'] = cantrip_d6[i].get()
-        d['combatant'+str(i)]['Other_d6'] = other_d6[i].get()
-        d['combatant'+str(i)]['Advantage'] = advantage[i].get()
-    #pprint.pprint(d)
-    output = []   
-    for i in range(0,length):
-        
-        keys = ['Range_d4', 'Cantrip_d6', 'Finesse_d6','Melee_d8', 'Move_d6','Spell_d10','Other_d6']
-        if sum([d['combatant'+str(i)].get(key) for key in keys]) > 0:
-            name = (d['combatant'+str(i)]["Name"])
-            dice =[]
-            actions = []
-            if d['combatant'+str(i)]['Range_d4'] == 1:
-                dice.append(4)
-                actions.append('Range_d4')
-            if d['combatant'+str(i)]['Cantrip_d6'] == 1:
-                dice.append(6) 
-                actions.append('Cantrip_d6')
-            if d['combatant'+str(i)]['Finesse_d6'] == 1:
-                dice.append(6) 
-                actions.append('Finesse_d6')
-            if d['combatant'+str(i)]['Melee_d8'] == 1:
-                dice.append(8) 
-                actions.append('Melee_d8')
-            if d['combatant'+str(i)]['Move_d6'] == 1:
-                dice.append(6) 
-                actions.append('Move_d6')
-            if d['combatant'+str(i)]['Spell_d10'] == 1:
-                dice.append(10) 
-                actions.append('Spell_d10')
-            if d['combatant'+str(i)]['Other_d6'] == 1:
-                dice.append(6) 
-                actions.append('Other_d6')
-            #print((name,dice))
-            if d['combatant'+str(i)]['Advantage'] == '':
-                rolls = []
-                for die in dice:
-                    rolls.append(random.randint(1,die))
-                roll = sum(rolls) - d['combatant'+str(i)]['Bonus']
-                output.append((name,dice,roll, actions))
-            if d['combatant'+str(i)]['Advantage'] == 'Adv':
-                rolls1 = []
-                rolls2 = []
-                for die in dice:
-                    rolls1.append(random.randint(1,die))
-                    rolls2.append(random.randint(1,die))
-                roll = min(sum(rolls1), sum(rolls2)) -d['combatant'+str(i)]['Bonus']   
-                output.append((name,dice,roll,actions))
-            if d['combatant'+str(i)]['Advantage'] == 'Dis':
-                rolls1 = []
-                rolls2 = []
-                for die in dice:
-                    rolls1.append(random.randint(1,die))
-                    rolls2.append(random.randint(1,die))
-                roll = max(sum(rolls1), sum(rolls2))-d['combatant'+str(i)]['Bonus']           
-                output.append((name,dice,roll,actions))                   
-                
-    output.sort(key = lambda x: x[2])
-    textbox.insert('end', 'Name'.ljust(12)+ 'Roll'.ljust(6) + 'Action\n')
-    for character in output:
-        textbox.insert('end', character[0].ljust(12)+ str(character[2]).ljust(6) + str(character[3])+'\n')
 
 mainloop()
